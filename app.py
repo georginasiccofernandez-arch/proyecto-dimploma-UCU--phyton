@@ -108,31 +108,44 @@ with tab2:
     )
 
     if canasta_seleccionada:
+        n_seleccionados = len(canasta_seleccionada)
         df_canasta = df[df['Producto'].isin(canasta_seleccionada)]
 
         ticket_por_super = df_canasta.groupby(['Super', 'Producto'])['Precio'].mean().reset_index()
-        ticket_total = ticket_por_super.groupby('Super')['Precio'].sum().reset_index()
-        ticket_total = ticket_total.sort_values(by='Precio')
 
-        st.divider()
+        conteo_productos = ticket_por_super.groupby('Super')['Producto'].count().reset_index()
+        conteo_productos.columns = ['Super', 'Cantidad_Productos']
 
-        ganador = ticket_total.iloc[0]
-        st.success(
-            f"**El ticket más barato para esta canasta está en {ganador['Super']}** por un total aproximado de **${ganador['Precio']:.2f}**")
+        umbrales_validos = conteo_productos[conteo_productos['Cantidad_Productos'] >= (n_seleccionados * 0.8)]['Super']
 
-        fig_ticket = px.bar(
-            ticket_total,
-            x='Super',
-            y='Precio',
-            color='Super',
-            text_auto='.2f',
-            title="Costo Total de tu Canasta por Supermercado",
-            color_discrete_sequence=px.colors.qualitative.Bold
-        )
-        fig_ticket.update_layout(xaxis_title="", yaxis_title="Costo Total ($)", showlegend=False)
-        st.plotly_chart(fig_ticket, use_container_width=True)
+        ticket_por_super_filtrado = ticket_por_super[ticket_por_super['Super'].isin(umbrales_validos)]
 
-        st.markdown("**Desglose estimado por cadena:**")
-        st.dataframe(ticket_total.rename(columns={'Precio': 'Costo Total ($)'}).set_index('Super').T)
+        if not ticket_por_super_filtrado.empty:
+            ticket_total = ticket_por_super_filtrado.groupby('Super')['Precio'].sum().reset_index()
+            ticket_total = ticket_total.sort_values(by='Precio')
+
+            st.divider()
+
+            ganador = ticket_total.iloc[0]
+            st.success(
+                f"**El ticket más barato para esta canasta está en {ganador['Super']}** por un total aproximado de **${ganador['Precio']:.2f}**")
+
+            fig_ticket = px.bar(
+                ticket_total,
+                x='Super',
+                y='Precio',
+                color='Super',
+                text_auto='.2f',
+                title="Costo Total de tu Canasta por Supermercado",
+                color_discrete_sequence=px.colors.qualitative.Bold
+            )
+            fig_ticket.update_layout(xaxis_title="", yaxis_title="Costo Total ($)", showlegend=False)
+            st.plotly_chart(fig_ticket, use_container_width=True)
+
+            st.markdown("**Desglose estimado por cadena:**")
+            st.dataframe(ticket_total.rename(columns={'Precio': 'Costo Total ($)'}).set_index('Super').T)
+        else:
+            st.warning(
+                "Ningún supermercado cuenta con el 80% o más de los productos seleccionados simultáneamente. Intenta modificar la combinación.")
     else:
         st.info("Selecciona al menos un producto arriba para comenzar la simulación de tu ticket.")
