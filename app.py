@@ -1,4 +1,4 @@
-# TODO: Aquí debes escribir tu código
+
 from pathlib import Path
 
 import streamlit as st
@@ -24,7 +24,7 @@ grupos = st.sidebar.multiselect("🏷Categoría de Producto", options=df['Grupo'
 supers = st.sidebar.multiselect("Supermercado", options=df['Super'].unique(), default=df['Super'].unique())
 
 min_p, max_p = float(df['Precio'].min()), float(df['Precio'].max())
-rango_precio = st.sidebar.slider("💰 Rango de Precio ($)", min_value=min_p, max_value=max_p, value=(min_p, max_p))
+rango_precio = st.sidebar.slider(" Rango de Precio ($)", min_value=min_p, max_value=max_p, value=(min_p, max_p))
 
 df_filtrado = df[
     (df['Trimestre'].isin(trimestres)) &
@@ -81,7 +81,7 @@ if not df_filtrado.empty:
         fig_box.update_layout(xaxis_title="Categoría de Producto", yaxis_title="Precio ($)", showlegend=False)
         st.plotly_chart(fig_box, use_container_width=True)
 
-    # Tabla de datos para que el consumidor vea el detalle exacto
+
     st.markdown("### Detalle de Productos")
     st.dataframe(df_filtrado[['Super', 'Grupo', 'Producto', 'Precio', 'Trimestre']].sort_values(by='Precio').head(50),
                  use_container_width=True)
